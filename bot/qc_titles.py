@@ -22,7 +22,9 @@ Parameters:
 # Usage:
 #     1. Install pywikibot (see URL below).
 #     2. Generate user-config.py for your account.
-#     3. Generate family file, put it into directory 'pywikibot/families/'.
+#     3. Put qcwiki_family.py into directory 'pywikibot/families/'.
+#        You can also generate family file yourself using script
+#        'generate_family_file.py' provided in Pywikibot installation.
 #     4. Put this script into 'scripts/userscripts/' directory.
 #     5. Run bot with command:
 #
