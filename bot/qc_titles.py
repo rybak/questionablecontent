@@ -1,7 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 r"""
-This bot updates Lua table on page 'Module:QC/titles'.
+This bot downloads archive.php and updates Lua table on page
+'Module:QC/titles'.
 
 Parameters:
 
@@ -34,8 +35,11 @@ Parameters:
 
 from __future__ import absolute_import, division, unicode_literals
 
-import re
 import sys
+import re
+import urllib.request
+import os.path
+import datetime
 
 import pywikibot
 from pywikibot.bot_choice import QuitKeyboardInterrupt
@@ -43,12 +47,41 @@ from pywikibot.tools.formatter import color_format
 
 
 DEFAULT_PAGE_TITLE = 'Module:QC/titles'
+SOURCE_PAGE = 'archive.php'
+SOURCE_URL = 'https://questionablecontent.net/' + SOURCE_PAGE
 
 
 def grep_lua_last_comic(text):
     last_comic_m = re.search('\[([0-9]{4,6})\]', text)
     last_comic = last_comic_m.group(1)
     return int(last_comic)
+
+
+def is_fresh(filename):
+    try:
+        mt = os.path.getmtime(filename)
+        last_modified = datetime.datetime.fromtimestamp(mt)
+        delta = datetime.datetime.now() - last_modified
+        return delta.total_seconds() < 3600
+    except OSError:
+        return False
+
+
+def download(url: str, filename: str) -> str:
+    pywikibot.output("Downloading {}...".format(filename))
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent' : "Magic"})
+        response = urllib.request.urlopen(req)
+        data = response.read().decode('utf-8', errors='ignore')
+    except urllib.error.URLError as e:
+        pywikibot.error(str(e))
+        return None
+    # Write data to file
+    with open(filename, 'w') as f:
+        f.write(data)
+        f.close()
+        pywikibot.output("Updated local copy of '{}'.".format(filename))
+    return data
 
 
 def main(*args):
@@ -92,13 +125,22 @@ def main(*args):
         pywikibot.error("Aborting.")
         return False
     if want_download:
-        pywikibot.output("Will download archive.php.")
+        pywikibot.output("Will download '{}'.".format(SOURCE_PAGE))
     pywikibot.output("Will edit page '{}'.".format(page_title))
 
     try:
         if want_download:
-            # TODO call curl
-            # TODO 1. download fresh archive.php
+            if is_fresh(SOURCE_PAGE):
+                pywikibot.output("Found fresh file '{}'".format(SOURCE_PAGE))
+                with open(SOURCE_PAGE, 'r', encoding='utf-8', errors='ignore') as f:
+                    data = f.read()
+            else:
+                data = download(SOURCE_URL, SOURCE_PAGE)
+            if data is None:
+                pywikibot.error("Could not download '{}'.".format(SOURCE_PAGE))
+                return False
+            lines = data.splitlines()
+            print(lines[140:150])
             # TODO 2. parse using original script qc_titles.py
             pass
 
