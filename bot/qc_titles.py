@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 r"""
-This bot downloads archive.php and updates Lua table on page
-'Module:QC/titles'.
+This bot parses HTML of https://questionablecontent.net/archive.php
+and updates Lua table on the page 'Module:QC/titles'.
 
 Parameters:
 
@@ -44,6 +44,7 @@ import re
 import urllib.request
 import os.path
 import datetime
+from textwrap import dedent
 
 import pywikibot
 from pywikibot.bot_choice import QuitKeyboardInterrupt
@@ -53,6 +54,7 @@ from pywikibot.tools.formatter import color_format
 DEFAULT_PAGE_TITLE = 'Module:QC/titles'
 SOURCE_PAGE = 'archive.php'
 SOURCE_URL = 'https://questionablecontent.net/' + SOURCE_PAGE
+DEBUG = False
 
 
 def grep_lua_last_comic(text):
@@ -86,6 +88,100 @@ def download(url: str, filename: str) -> str:
         f.close()
         pywikibot.output("Updated local copy of '{}'.".format(filename))
     return data
+
+
+def url(n):
+    return 'https://www.questionablecontent.net/view.php?comic=' + str(n)
+
+
+def parse_archive(f: str, output: str = "data.lua"):
+    ls = []
+    with open(f, encoding='utf-8', errors='ignore') as tmp:
+        ls = tmp.readlines()
+
+    pywikibot.output("Parsing '{}'...".format(f))
+    pywikibot.output("Number of lines: {}.".format(len(ls)))
+    # parse every line to a list of tuples (<number>, <title>)
+    res = []
+    #  Regex to parse <a> tags:   group 1, number      group 2, title
+    #                                   _____|____               _|
+    #                                  /          \             /  \
+    p = re.compile('view\\.php\\?comic=([0-9]{1,4}).*Comic \\1: (.*)</a>')
+    non_letters = re.compile('[^a-zA-Z]*')
+    for line in ls:
+        m = p.search(line)
+        if not m:
+            continue
+        num = m.group(1)
+        t = m.group(2)
+        res.append((num, t))
+        if DEBUG and non_letters.fullmatch(t):
+            r = res[-1]
+            print(r)
+            print(url(num))
+    pywikibot.output("Got {} raw results.".format(len(res)))
+
+    if DEBUG:
+        print(res[500])
+        print(res[1500])
+        print(res[2500])
+
+    # put from list to a dictionary to remove duplicates
+    m = {}  # dict from comic number to title
+    for r in res:
+        if DEBUG and r[0] == '3911':
+            print(r)
+        m[int(r[0])] = r[1]
+
+    # check if any are missing
+    for n in range(1, max(m) + 1):
+        if n not in m:
+            pywikibot.output(color_format("Missing comic {red}#{0}{default}.", n))
+
+    ### fix known issues of the archive.php page ###
+    ## missing in archive.php
+    m[570] = "She Missed It All"
+    m[870] = "Semi-Naker!"
+
+    ## missing titles
+    m[878] = "One Flew Over The Cuckoo's Nest"
+    m[2770] = "Plans Gone Awry"
+
+    ## broken titles
+    # misnumbered as 931
+    m[971] = "Clean Freak by supar-webcomorx guest artiste Ryan Estrada"
+    # completely overwritten by 3906 for some reason
+    m[3901] = "Multiple Anatomy"
+    # title duplicate overwritten by title from 2153
+    m[2155] = "Be More Obvious"
+    # title duplicate overwritten by title from 2393
+    m[2394] = "Greeting Gauntlet"
+    # comic 2308 is duplicated with a broken link to view.php?comic=0
+    del(m[0])
+
+    # HTML encode these two just in case
+    m[2680] = "&gt;:|"  # angry emoticon ">:|"
+    m[3911] = "&lt; body &gt;"  # body tag "< body >"
+
+    pywikibot.output(color_format("Got {lightblue}{0}{default} comic titles after cleanup.", len(m)))
+
+
+    def lua_item(r):
+        # some titles have quotes in them
+        return '[{}]="{}",'.format(r[0], r[1].replace('"', '\\"'))
+
+
+    # write out like a Lua table
+    with open(output, 'w', encoding='utf-8') as tmp:
+        tmp.write('local titles = {\n')
+        # last comic at the top to make manual editing easier
+        tmp.write('\n'.join(map(lua_item, reversed(sorted(m.items())))))
+        tmp.write(dedent("""
+        }
+        return titles
+        -- [[Category:Lua Modules]]"""))
+
+    pywikibot.output("Lua module is ready in file '{}'.".format(output))
 
 
 def main(*args):
@@ -147,9 +243,9 @@ def main(*args):
                 pywikibot.error("Could not download '{}'.".format(SOURCE_PAGE))
                 return False
             lines = data.splitlines()
-            print(lines[140:150])
-            # TODO 2. parse using original script qc_titles.py
-            pass
+            if DEBUG:
+                print(lines[140:150])
+            parse_archive(SOURCE_PAGE, new_data_file)
 
         site = pywikibot.Site()
         page = pywikibot.Page(site, page_title)
