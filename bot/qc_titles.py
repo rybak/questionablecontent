@@ -184,6 +184,39 @@ def parse_archive(f: str, output: str = "data.lua"):
     pywikibot.output("Lua module is ready in file '{}'.".format(output))
 
 
+def put_text(page, new, summary, count, asynchronous=False):
+    """
+    Save the new text. Boilerplate copied from scripts/add_text.py.
+
+    © Pywikibot team, 2013-2019
+    """
+    page.text = new
+    try:
+        page.save(summary=summary, asynchronous=asynchronous,
+                  minor=page.namespace() != 3)
+    except pywikibot.EditConflict:
+        pywikibot.output('Edit conflict! skip!')
+    except pywikibot.ServerError:
+        if count <= config.max_retries:
+            pywikibot.output('Server Error! Wait..')
+            pywikibot.sleep(config.retry_wait)
+            return None
+        else:
+            raise pywikibot.ServerError(
+                'Server Error! Maximum retries exceeded')
+    except pywikibot.SpamfilterError as e:
+        pywikibot.output(
+            'Cannot change {} because of blacklist entry {}'
+            .format(page.title(), e.url))
+    except pywikibot.LockedPage:
+        pywikibot.output('Skipping {} (locked page)'.format(page.title()))
+    except pywikibot.PageNotSaved as error:
+        pywikibot.output('Error putting page: {}'.format(error.args))
+    else:
+        return True
+    return False
+
+
 def main(*args):
     """
     Process command line arguments and invoke bot.
@@ -301,8 +334,12 @@ def main(*args):
         elif choice == 'b':
             pywikibot.bot.open_webbrowser(page)
         elif choice == 'y':
-            pywikibot.output("Summary of edit: '{}'".format(summary))
-            pywikibot.output("Doing nothing for now... Development still ongoing")
+            error_count = 0
+            while True:
+                result = put_text(page, new_text, summary, error_count)
+                if result is not None:
+                    return result
+                error_count += 1
             return True
 
     except pywikibot.NoPage:
