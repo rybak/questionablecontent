@@ -166,25 +166,30 @@ def main(*args):
 
         old_last = grep_lua_last_comic(old_text)
         new_last = grep_lua_last_comic(new_text)
+
         # report what will happen
         pywikibot.output(color_format(
             "Old version goes till {lightred}{0}{default}.", old_last))
         pywikibot.output(color_format(
             "New version goes till {lightgreen}{0}{default}.", new_last))
         username = site.username()
-        new_text = '-- Updated by {}\n'.format(username) + new_text
+        new_text = '-- Updated by {}\n'.format(username) + new_text.rstrip()
         summary = 'add comic titles from {} to {}'.format(
                 old_last + 1, new_last)
         if extra_summary:
             summary = summary + " ({})".format(extra_summary)
+        pywikibot.showDiff(old_text, new_text)
         pywikibot.output(color_format("Summary will be" +
             "\n\t{lightblue}{0}{default}", summary))
-        pywikibot.showDiff(old_text, new_text, context=3)
 
         # check if the edit is sensible
-        if old_last > new_last:
-            pywikibot.error("Old version is fresher than New version.")
-            return False
+        if old_text == new_text:
+            pywikibot.output("No changes. Nothing to do.")
+            return True
+        if old_last >= new_last:
+            pywikibot.output("Current version already has {0}." \
+                    .format(new_last) + " Nothing to do.")
+            return True
 
         try:
             choice = pywikibot.input_choice(
