@@ -11,6 +11,8 @@ Parameters:
 -page           Title of the page which should be updated.
 
 -file           File to read new Lua code from.
+
+-summary        Extra message to add to the edit summary.
 """
 
 #
@@ -102,6 +104,7 @@ def main(*args):
     new_data_file = 'data.lua'
     want_download = True
     page_title = DEFAULT_PAGE_TITLE
+    extra_summary = None
 
     for arg in local_args:
         option, sep, value = arg.partition(':')
@@ -111,6 +114,8 @@ def main(*args):
             want_download = False
         elif option == '-page':
             page_title = value
+        elif option == '-summary':
+            extra_summary = value
         else:
             pywikibot.warning("Unrecognized option {}".format(option))
 
@@ -170,6 +175,8 @@ def main(*args):
         new_text = '-- Updated by {}\n'.format(username) + new_text
         summary = 'add comic titles from {} to {}'.format(
                 old_last + 1, new_last)
+        if extra_summary:
+            summary = summary + " ({})".format(extra_summary)
         pywikibot.output(color_format("Summary will be" +
             "\n\t{lightblue}{0}{default}", summary))
         pywikibot.showDiff(old_text, new_text, context=3)
