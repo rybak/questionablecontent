@@ -303,8 +303,12 @@ def main(*args):
             "New version goes till {lightgreen}{0}{default}.", new_last))
         username = site.username()
         new_text = '-- Updated by {}\n'.format(username) + new_text.rstrip()
-        summary = 'add comic titles from {} to {}'.format(
-                old_last + 1, new_last)
+        summary = None
+        if old_last + 1 == new_last:
+            summary = 'add comic title for {}'.format(new_last)
+        else:
+            summary = 'add comic titles from {} to {}'.format(
+                    old_last + 1, new_last)
         if extra_summary:
             summary = summary + " ({})".format(extra_summary)
         pywikibot.showDiff(old_text, new_text)
