@@ -163,6 +163,9 @@ def parse_archive(f: str, output: str = "data.lua"):
     m[2680] = "&gt;:|"  # angry emoticon ">:|"
     m[3911] = "&lt; body &gt;"  # body tag "< body >"
 
+    # missing trademark sign in the archive
+    m[4029] = m[4029] + '™'
+
     pywikibot.output(color_format("Got {aqua}{0}{default} comic titles after cleanup.", len(m)))
 
 
