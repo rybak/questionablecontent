@@ -163,6 +163,8 @@ def parse_archive(f: str, output: str = "data.lua"):
     m[2680] = "&gt;:|"  # angry emoticon ">:|"
     m[3911] = "&lt; body &gt;"  # body tag "< body >"
 
+    # missing diacritic in the archive
+    m[3219] = 'Sláinte'
     # missing trademark sign in the archive
     m[4029] = m[4029] + '™'
 
