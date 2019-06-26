@@ -167,6 +167,8 @@ def parse_archive(f: str, output: str = "data.lua"):
     m[3219] = 'Sláinte'
     # missing trademark sign in the archive
     m[4029] = m[4029] + '™'
+    # typo in the archive
+    m[4032] = 'Friend To The Lowly'
 
     pywikibot.output(color_format("Got {aqua}{0}{default} comic titles after cleanup.", len(m)))
 
