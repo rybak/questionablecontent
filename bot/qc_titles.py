@@ -164,6 +164,12 @@ def parse_archive(f: str, output: str = "data.lua"):
     del(m[0])
     # has two titles in archive
     m[1496] = "Tetsuoooooo! Kanedaaaaaaaaa!"
+    # have incorrect title in archive
+    m[1464] = "Cheers"
+    m[1499] = "One Year Anniversary Special"
+    m[1601] = m[3]
+    m[1645] = "Unexpected Windfall"
+    m[1758] = "Oh Shit"
 
     # HTML encode these two just in case
     m[2680] = "&gt;:|"  # angry emoticon ">:|"
