@@ -162,6 +162,8 @@ def parse_archive(f: str, output: str = "data.lua"):
     m[2394] = "Greeting Gauntlet"
     # comic 2308 is duplicated with a broken link to view.php?comic=0
     del(m[0])
+    # has two titles in archive
+    m[1496] = "Tetsuoooooo! Kanedaaaaaaaaa!"
 
     # HTML encode these two just in case
     m[2680] = "&gt;:|"  # angry emoticon ">:|"
