@@ -13,6 +13,10 @@ Parameters:
 -file           File to read new Lua code from.
 
 -summary        Extra message to add to the edit summary.
+
+Example:
+
+    python3 pwb.py qc_titles '-summary:extra message'
 """
 
 #
@@ -313,9 +317,11 @@ def main(*args):
         summary = None
         if old_last + 1 == new_last:
             summary = 'add comic title for {}'.format(new_last)
-        else:
+        elif new_last > old_last:
             summary = 'add comic titles from {} to {}'.format(
                     old_last + 1, new_last)
+        else:
+            summary = 'correcting older comic titles'
         if extra_summary:
             summary = summary + " ({})".format(extra_summary)
         pywikibot.showDiff(old_text, new_text)
@@ -326,7 +332,7 @@ def main(*args):
         if old_text == new_text:
             pywikibot.output("No changes. Nothing to do.")
             return True
-        if old_last >= new_last:
+        if old_last >= new_last and old_text == new_text:
             pywikibot.output("Current version already has {0}." \
                     .format(new_last) + " Nothing to do.")
             return True
