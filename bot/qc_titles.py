@@ -316,6 +316,18 @@ def main(*args):
             "New version goes till {lightgreen}{0}{default}.", new_last))
         username = site.username()
         new_text = '-- Updated by {}\n'.format(username) + new_text.rstrip()
+
+        # check if the edit is sensible
+        if old_text == new_text:
+            pywikibot.output("No changes. Nothing to do.")
+            return True
+        if old_last >= new_last and old_text == new_text:
+            pywikibot.output("Current version already has {0}." \
+                    .format(new_last) + " Nothing to do.")
+            return True
+
+        pywikibot.showDiff(old_text, new_text)
+
         summary = None
         if old_last + 1 == new_last:
             summary = 'add comic title for {}'.format(new_last)
@@ -326,18 +338,8 @@ def main(*args):
             summary = 'correcting older comic titles'
         if extra_summary:
             summary = summary + " ({})".format(extra_summary)
-        pywikibot.showDiff(old_text, new_text)
         pywikibot.output(color_format("Summary will be" +
             "\n\t{lightblue}{0}{default}", summary))
-
-        # check if the edit is sensible
-        if old_text == new_text:
-            pywikibot.output("No changes. Nothing to do.")
-            return True
-        if old_last >= new_last and old_text == new_text:
-            pywikibot.output("Current version already has {0}." \
-                    .format(new_last) + " Nothing to do.")
-            return True
 
         try:
             choice = pywikibot.input_choice(
