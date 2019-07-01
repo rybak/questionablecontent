@@ -336,6 +336,8 @@ def main(*args):
                     old_last + 1, new_last)
         else:
             summary = 'correcting older comic titles'
+            while not extra_summary:
+                extra_summary = pywikibot.input("Please add extra summary message:")
         if extra_summary:
             summary = summary + " ({})".format(extra_summary)
         pywikibot.output(color_format("Summary will be" +
