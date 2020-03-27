@@ -181,6 +181,10 @@ def parse_archive(f: str, output: str = "data.lua"):
     m[4029] = m[4029] + '™'
     # typo in the archive
     m[4032] = 'Friend To The Lowly'
+    # extra comic number in the archive
+    m[4087] = 'With Utmost Precision'
+    # typo in the archive
+    m[4230] = 'To Be Truthful'
 
     pywikibot.output(color_format("Got {aqua}{0}{default} comic titles after cleanup.", len(m)))
 
