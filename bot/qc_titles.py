@@ -47,7 +47,7 @@ import sys
 import re
 import urllib.request
 import os.path
-import datetime
+from datetime import datetime
 from textwrap import dedent
 
 import pywikibot
@@ -70,8 +70,8 @@ def grep_lua_last_comic(text):
 def is_fresh(filename):
     try:
         mt = os.path.getmtime(filename)
-        last_modified = datetime.datetime.fromtimestamp(mt)
-        delta = datetime.datetime.now() - last_modified
+        last_modified = datetime.fromtimestamp(mt)
+        delta = datetime.now() - last_modified
         return delta.total_seconds() < 3600
     except OSError:
         return False
