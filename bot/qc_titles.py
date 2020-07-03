@@ -14,6 +14,8 @@ Parameters:
 
 -summary        Extra message to add to the edit summary.
 
+-auto           Run bot automatically on a schedule
+
 Example:
 
     python3 pwb.py qc_titles '-summary:extra message'
@@ -48,8 +50,10 @@ import re
 import urllib.request
 import os.path
 from datetime import datetime
+from datetime import timedelta
 from textwrap import dedent
 import time
+import subprocess
 
 import pywikibot
 from pywikibot.bot_choice import QuitKeyboardInterrupt
@@ -59,7 +63,14 @@ from pywikibot.tools.formatter import color_format
 DEFAULT_PAGE_TITLE = 'Module:QC/titles'
 SOURCE_PAGE = 'archive.php'
 SOURCE_URL = 'https://questionablecontent.net/' + SOURCE_PAGE
+MIN_AUTO_SECONDS = 60 * 10
+DAY_SECONDS = timedelta(days=1).total_seconds()
+MAX_AUTO_SECONDS = DAY_SECONDS
 DEBUG = False
+if DEBUG:
+    MIN_AUTO_SECONDS = 10
+    MAX_AUTO_SECONDS = 30
+    DAY_SECONDS = 10
 
 
 def grep_lua_last_comic(text):
@@ -73,7 +84,7 @@ def is_fresh(filename):
         mt = os.path.getmtime(filename)
         last_modified = datetime.fromtimestamp(mt)
         delta = datetime.now() - last_modified
-        return delta.total_seconds() < 3600
+        return delta.total_seconds() < MIN_AUTO_SECONDS
     except OSError:
         return False
 
@@ -241,7 +252,8 @@ def put_text(page, new, summary, count, asynchronous=False):
     return False
 
 
-def update_titles(new_data_file: str, want_download: bool, page_title: str, extra_summary: str) -> bool:
+def update_titles(new_data_file: str, want_download: bool, page_title: str, extra_summary: str,
+        auto_scheduled: bool) -> bool:
     """
     Perform a single update of page 'page_title' using 'archive.php' of QC website.
     """
@@ -311,10 +323,13 @@ def update_titles(new_data_file: str, want_download: bool, page_title: str, extr
         "\n\t{lightblue}{0}{default}", summary))
 
     try:
-        choice = pywikibot.input_choice(
-            "Do you want to accept these changes?",
-            [('Yes', 'y'), ('No', 'n'),
-             ('open in Browser', 'b')], 'n')
+        if auto_scheduled:
+            choice = 'y'
+        else:
+            choice = pywikibot.input_choice(
+                "Do you want to accept these changes?",
+                [('Yes', 'y'), ('No', 'n'),
+                 ('open in Browser', 'b')], 'n')
     except QuitKeyboardInterrupt:
         sys.exit("User quit bot run.")
 
@@ -331,6 +346,53 @@ def update_titles(new_data_file: str, want_download: bool, page_title: str, extr
                 return result
             error_count += 1
         return True
+
+
+def notify_user():
+    try:
+        app_name = os.path.basename(__file__)
+    except:
+        app_name = 'QC Wiki bot'
+    error_title = 'Warning'
+    error_message = 'Error in Questionable Content Wiki bot.'
+    full_message = error_title + '. ' + error_message
+
+    print('\a')  # ASCII bell
+    try:
+        # On Linuxes---using binary notify-send
+        # https://stackoverflow.com/a/44027111/1083697
+        subprocess.call(['notify-send', app_name, full_message, '--icon=dialog-error'])
+    except:
+        pass
+    try:
+        # On Ubuntu---using speech-to-text generator
+        # https://stackoverflow.com/a/29590673/1083697
+        # start speech dispatcher
+        subprocess.call(['speech-dispatcher'])
+        # option -r -50 slows down speech a bit.
+        subprocess.call(['spd-say', '-r', '-50', full_message])
+    except:
+        pass
+    try:
+        # pip3 install plyer
+        # Cross-platform python library
+        # https://stackoverflow.com/a/42085439/1083697
+        from plyer import notification
+        notification.notify(
+            title=error_title,
+            message=error_message,
+            app_name=app_name
+        )
+    except ImportError:
+        pass
+    try:
+        # pip3 install win10toast
+        # https://stackoverflow.com/a/49892758/1083697
+        from win10toast import ToastNotifier
+        toaster = ToastNotifier()
+        toaster.show_toast(app_name, full_message, duration=10)
+    except ImportError:
+        pass
 
 
 def main(*args):
@@ -350,6 +412,7 @@ def main(*args):
     want_download = True
     page_title = DEFAULT_PAGE_TITLE
     extra_summary = None
+    auto_scheduled = False
 
     for arg in local_args:
         option, sep, value = arg.partition(':')
@@ -361,6 +424,8 @@ def main(*args):
             page_title = value
         elif option == '-summary':
             extra_summary = value
+        elif option == '-auto':
+            auto_scheduled = True
         else:
             pywikibot.warning("Unrecognized option {}".format(option))
 
@@ -376,12 +441,45 @@ def main(*args):
             not check_option('-page', page_title):
         pywikibot.error("Aborting.")
         return False
+    if auto_scheduled and not want_download:
+        pywikibot.error("Flags -auto and -nodownload are not compatible.")
+        return False
+    if auto_scheduled:
+        pywikibot.output("In automatic mode the edits will be performed without confirmation.")
+        choice = pywikibot.input("Are you sure? Type 'yes' to acknowledge automatic mode")
+        if choice != 'yes':
+            pywikibot.error("Aborting.")
+            return False
     if want_download:
         pywikibot.output("Will download '{}'.".format(SOURCE_PAGE))
     pywikibot.output("Will edit page '{}'.".format(page_title))
 
     try:
-        return update_titles(new_data_file, want_download, page_title, extra_summary)
+        sleep_on_error_seconds = MIN_AUTO_SECONDS
+        while True:
+            updated = update_titles(new_data_file, want_download, page_title, extra_summary, auto_scheduled)
+            if not auto_scheduled:
+                break
+            if updated:
+                sleep_on_error_seconds = MIN_AUTO_SECONDS  # reset error timeout
+                sleep_seconds = DAY_SECONDS
+                # no comics on Saturday/Sunday, so skip three days after an update on Friday
+                if datetime.today().weekday() == 4:  # on Friday
+                    sleep_seconds *= 3
+                pywikibot.output("Update successful.")
+                pywikibot.output("Sleeping for {} seconds.".format(sleep_seconds))
+                time.sleep(sleep_seconds)
+            else:
+                sleep_on_error_seconds *= 2
+                if sleep_on_error_seconds > MAX_AUTO_SECONDS:
+                    sleep_on_error_seconds = MAX_AUTO_SECONDS
+                pywikibot.error("Could not update.")
+                pywikibot.error("Sleeping for {} seconds.".format(sleep_on_error_seconds))
+                notify_user()
+                time.sleep(sleep_on_error_seconds)
+    except KeyboardInterrupt:
+        pywikibot.output("Interrupted by user. Aborting.")
+        return False
     except pywikibot.NoPage:
         pywikibot.error("{} doesn't exist, abort!".format(page.title()))
         return False
