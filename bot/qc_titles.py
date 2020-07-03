@@ -255,8 +255,8 @@ def update_titles(new_data_file: str, want_download: bool, page_title: str, extr
         if data is None:
             pywikibot.error("Could not download '{}'.".format(SOURCE_PAGE))
             return False
-        lines = data.splitlines()
         if DEBUG:
+            lines = data.splitlines()
             print(lines[140:150])
         parse_archive(SOURCE_PAGE, new_data_file)
 
