@@ -20,7 +20,7 @@ Example:
 """
 
 #
-# © Andrei Rybak, 2019
+# © Andrei Rybak, 2019-2020
 # Written for Questionable Content Wiki
 #
 # Distributed under the terms of the MIT license.
@@ -241,6 +241,98 @@ def put_text(page, new, summary, count, asynchronous=False):
     return False
 
 
+def update_titles(new_data_file: str, want_download: bool, page_title: str, extra_summary: str) -> bool:
+    """
+    Perform a single update of page 'page_title' using 'archive.php' of QC website.
+    """
+    if want_download:
+        if is_fresh(SOURCE_PAGE):
+            pywikibot.output("Found fresh file '{}'".format(SOURCE_PAGE))
+            with open(SOURCE_PAGE, 'r', encoding='utf-8', errors='ignore') as f:
+                data = f.read()
+        else:
+            data = download(SOURCE_URL, SOURCE_PAGE)
+        if data is None:
+            pywikibot.error("Could not download '{}'.".format(SOURCE_PAGE))
+            return False
+        lines = data.splitlines()
+        if DEBUG:
+            print(lines[140:150])
+        parse_archive(SOURCE_PAGE, new_data_file)
+
+    site = pywikibot.Site()
+    page = pywikibot.Page(site, page_title)
+    old_text = page.get()
+    new_text = None
+    try:
+        with open(new_data_file, 'r', encoding='utf-8') as f:
+            new_text = f.read()
+    except:
+        pass
+    if new_text is None:
+        pywikibot.error("Could not read new text to upload. Aborting.")
+        return False
+
+    old_last = grep_lua_last_comic(old_text)
+    new_last = grep_lua_last_comic(new_text)
+
+    # report what will happen
+    pywikibot.output(color_format(
+        "Old version goes till {lightred}{0}{default}.", old_last))
+    pywikibot.output(color_format(
+        "New version goes till {lightgreen}{0}{default}.", new_last))
+    username = site.username()
+    new_text = '-- Updated by {}\n'.format(username) + new_text.rstrip()
+
+    # check if the edit is sensible
+    if old_text == new_text:
+        pywikibot.output("No changes. Nothing to do.")
+        return True
+    if old_last >= new_last and old_text == new_text:
+        pywikibot.output("Current version already has {0}." \
+                .format(new_last) + " Nothing to do.")
+        return True
+
+    pywikibot.showDiff(old_text, new_text)
+
+    summary = None
+    if old_last + 1 == new_last:
+        summary = 'add comic title for {}'.format(new_last)
+    elif new_last > old_last:
+        summary = 'add comic titles from {} to {}'.format(
+                old_last + 1, new_last)
+    else:
+        summary = 'correcting older comic titles'
+        while not extra_summary:
+            extra_summary = pywikibot.input("Please add extra summary message:")
+    if extra_summary:
+        summary = summary + " ({})".format(extra_summary)
+    pywikibot.output(color_format("Summary will be" +
+        "\n\t{lightblue}{0}{default}", summary))
+
+    try:
+        choice = pywikibot.input_choice(
+            "Do you want to accept these changes?",
+            [('Yes', 'y'), ('No', 'n'),
+             ('open in Browser', 'b')], 'n')
+    except QuitKeyboardInterrupt:
+        sys.exit("User quit bot run.")
+
+    if choice == 'n':
+        pywikibot.output("Okay, doing nothing.")
+        return False
+    elif choice == 'b':
+        pywikibot.bot.open_webbrowser(page)
+    elif choice == 'y':
+        error_count = 0
+        while True:
+            result = put_text(page, new_text, summary, error_count)
+            if result is not None:
+                return result
+            error_count += 1
+        return True
+
+
 def main(*args):
     """
     Process command line arguments and invoke bot.
@@ -289,93 +381,7 @@ def main(*args):
     pywikibot.output("Will edit page '{}'.".format(page_title))
 
     try:
-        if want_download:
-            if is_fresh(SOURCE_PAGE):
-                pywikibot.output("Found fresh file '{}'".format(SOURCE_PAGE))
-                with open(SOURCE_PAGE, 'r', encoding='utf-8', errors='ignore') as f:
-                    data = f.read()
-            else:
-                data = download(SOURCE_URL, SOURCE_PAGE)
-            if data is None:
-                pywikibot.error("Could not download '{}'.".format(SOURCE_PAGE))
-                return False
-            lines = data.splitlines()
-            if DEBUG:
-                print(lines[140:150])
-            parse_archive(SOURCE_PAGE, new_data_file)
-
-        site = pywikibot.Site()
-        page = pywikibot.Page(site, page_title)
-        old_text = page.get()
-        new_text = None
-        try:
-            with open(new_data_file, 'r', encoding='utf-8') as f:
-                new_text = f.read()
-        except:
-            pass
-        if new_text is None:
-            pywikibot.error("Could not read new text to upload. Aborting.")
-            return False
-
-        old_last = grep_lua_last_comic(old_text)
-        new_last = grep_lua_last_comic(new_text)
-
-        # report what will happen
-        pywikibot.output(color_format(
-            "Old version goes till {lightred}{0}{default}.", old_last))
-        pywikibot.output(color_format(
-            "New version goes till {lightgreen}{0}{default}.", new_last))
-        username = site.username()
-        new_text = '-- Updated by {}\n'.format(username) + new_text.rstrip()
-
-        # check if the edit is sensible
-        if old_text == new_text:
-            pywikibot.output("No changes. Nothing to do.")
-            return True
-        if old_last >= new_last and old_text == new_text:
-            pywikibot.output("Current version already has {0}." \
-                    .format(new_last) + " Nothing to do.")
-            return True
-
-        pywikibot.showDiff(old_text, new_text)
-
-        summary = None
-        if old_last + 1 == new_last:
-            summary = 'add comic title for {}'.format(new_last)
-        elif new_last > old_last:
-            summary = 'add comic titles from {} to {}'.format(
-                    old_last + 1, new_last)
-        else:
-            summary = 'correcting older comic titles'
-            while not extra_summary:
-                extra_summary = pywikibot.input("Please add extra summary message:")
-        if extra_summary:
-            summary = summary + " ({})".format(extra_summary)
-        pywikibot.output(color_format("Summary will be" +
-            "\n\t{lightblue}{0}{default}", summary))
-
-        try:
-            choice = pywikibot.input_choice(
-                "Do you want to accept these changes?",
-                [('Yes', 'y'), ('No', 'n'),
-                 ('open in Browser', 'b')], 'n')
-        except QuitKeyboardInterrupt:
-            sys.exit("User quit bot run.")
-
-        if choice == 'n':
-            pywikibot.output("Okay, doing nothing.")
-            return False
-        elif choice == 'b':
-            pywikibot.bot.open_webbrowser(page)
-        elif choice == 'y':
-            error_count = 0
-            while True:
-                result = put_text(page, new_text, summary, error_count)
-                if result is not None:
-                    return result
-                error_count += 1
-            return True
-
+        return update_titles(new_data_file, want_download, page_title, extra_summary)
     except pywikibot.NoPage:
         pywikibot.error("{} doesn't exist, abort!".format(page.title()))
         return False
