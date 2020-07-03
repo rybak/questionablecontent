@@ -49,6 +49,7 @@ import urllib.request
 import os.path
 from datetime import datetime
 from textwrap import dedent
+import time
 
 import pywikibot
 from pywikibot.bot_choice import QuitKeyboardInterrupt
@@ -223,7 +224,7 @@ def put_text(page, new, summary, count, asynchronous=False):
     except pywikibot.ServerError:
         if count <= config.max_retries:
             pywikibot.output('Server Error! Wait..')
-            pywikibot.sleep(config.retry_wait)
+            time.sleep(config.retry_wait)
             return None
         else:
             raise pywikibot.ServerError(
