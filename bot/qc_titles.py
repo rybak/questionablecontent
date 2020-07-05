@@ -65,7 +65,7 @@ SOURCE_PAGE = 'archive.php'
 SOURCE_URL = 'https://questionablecontent.net/' + SOURCE_PAGE
 MIN_AUTO_SECONDS = 60 * 10
 DAY_SECONDS = timedelta(days=1).total_seconds()
-MAX_AUTO_SECONDS = DAY_SECONDS
+MAX_AUTO_SECONDS = 60 * 60 * 6
 DEBUG = False
 if DEBUG:
     MIN_AUTO_SECONDS = 10
@@ -299,7 +299,7 @@ def update_titles(new_data_file: str, want_download: bool, page_title: str, extr
     # check if the edit is sensible
     if old_text == new_text:
         pywikibot.output("No changes. Nothing to do.")
-        return True
+        return False
     if old_last >= new_last and old_text == new_text:
         pywikibot.output("Current version already has {0}." \
                 .format(new_last) + " Nothing to do.")
@@ -461,28 +461,37 @@ def main(*args):
             updated = update_titles(new_data_file, want_download, page_title, extra_summary, auto_scheduled)
             if not auto_scheduled:
                 break
+            # first, update state about sleep time & last success and notify user
             if updated:
-                sleep_on_error_seconds = MIN_AUTO_SECONDS  # reset error timeout
-                sleep_seconds = DAY_SECONDS
-                # no comics on Saturday/Sunday, so skip three days after an update on Friday
-                if datetime.today().weekday() == 4:  # on Friday
-                    sleep_seconds *= 3
                 last_success_datetime = datetime.now()
+                sleep_on_error_seconds = MIN_AUTO_SECONDS  # reset error timeout
                 pywikibot.output("Update successful.")
-                pywikibot.output("Sleeping for {} seconds.".format(sleep_seconds))
-                time.sleep(sleep_seconds)
             else:
-                sleep_on_error_seconds *= 2
-                if sleep_on_error_seconds > MAX_AUTO_SECONDS:
-                    sleep_on_error_seconds = MAX_AUTO_SECONDS
                 pywikibot.error("Could not update.")
+                notify_user()
                 if last_success_datetime is not None:
                     pywikibot.error("Last successful update happened @ " + last_success_datetime)
                 else:
                     pywikibot.error("No successful updates yet.")
-                pywikibot.error("Sleeping for {} seconds.".format(sleep_on_error_seconds))
-                notify_user()
-                time.sleep(sleep_on_error_seconds)
+            # no comics on Saturday/Sunday, so skip three days after an update on Friday
+            weekday = datetime.today().weekday()
+            # second, decide how long to sleep before next attempt
+            if weekday == 4:  # on Friday
+                sleep_seconds = 5 * DAY_SECONDS // 2  # two and a half days
+            elif weekday == 5:  # Saturday
+                sleep_seconds = 3 * DAY_SECONDS // 2  # one and a half day
+            elif weekday == 6:  # Sunday
+                sleep_seconds = DAY_SECONDS // 2  # half a day
+            elif updated:
+                sleep_seconds = DAY_SECONDS
+            else:
+                sleep_seconds = sleep_on_error_seconds
+                # after using current value of sleep_on_error_seconds, increase it until max
+                sleep_on_error_seconds *= 2
+                if sleep_on_error_seconds > MAX_AUTO_SECONDS:
+                    sleep_on_error_seconds = MAX_AUTO_SECONDS
+            pywikibot.error("Sleeping for {} seconds.".format(sleep_seconds))
+            time.sleep(sleep_seconds)
     except KeyboardInterrupt:
         pywikibot.output("Interrupted by user. Aborting.")
         return False
