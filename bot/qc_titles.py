@@ -490,7 +490,7 @@ def main(*args):
                 sleep_on_error_seconds *= 2
                 if sleep_on_error_seconds > MAX_AUTO_SECONDS:
                     sleep_on_error_seconds = MAX_AUTO_SECONDS
-            pywikibot.error("Sleeping for {} seconds.".format(sleep_seconds))
+            pywikibot.output("Sleeping for {} seconds.".format(sleep_seconds))
             time.sleep(sleep_seconds)
     except KeyboardInterrupt:
         pywikibot.output("Interrupted by user. Aborting.")
