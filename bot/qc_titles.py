@@ -93,7 +93,7 @@ def download(url: str, filename: str) -> str:
     pywikibot.output("Downloading {}...".format(filename))
     try:
         req = urllib.request.Request(url, headers={'User-Agent' : "Magic"})
-        response = urllib.request.urlopen(req)
+        response = urllib.request.urlopen(req, timeout=10)
         data = response.read().decode('utf-8', errors='ignore')
     except urllib.error.URLError as e:
         pywikibot.error(str(e))
@@ -299,7 +299,7 @@ def update_titles(new_data_file: str, want_download: bool, page_title: str, extr
     # check if the edit is sensible
     if old_text == new_text:
         pywikibot.output("No changes. Nothing to do.")
-        return False
+        return True
     if old_last >= new_last and old_text == new_text:
         pywikibot.output("Current version already has {0}." \
                 .format(new_last) + " Nothing to do.")
@@ -444,12 +444,6 @@ def main(*args):
     if auto_scheduled and not want_download:
         pywikibot.error("Flags -auto and -nodownload are not compatible.")
         return False
-    if auto_scheduled:
-        pywikibot.output("In automatic mode the edits will be performed without confirmation.")
-        choice = pywikibot.input("Are you sure? Type 'yes' to acknowledge automatic mode")
-        if choice != 'yes':
-            pywikibot.error("Aborting.")
-            return False
     if want_download:
         pywikibot.output("Will download '{}'.".format(SOURCE_PAGE))
     pywikibot.output("Will edit page '{}'.".format(page_title))
@@ -483,7 +477,7 @@ def main(*args):
             elif weekday == 6:  # Sunday
                 sleep_seconds = DAY_SECONDS // 2  # half a day
             elif updated:
-                sleep_seconds = DAY_SECONDS
+                sleep_seconds = DAY_SECONDS // 4  # six hours
             else:
                 sleep_seconds = sleep_on_error_seconds
                 # after using current value of sleep_on_error_seconds, increase it until max
@@ -491,7 +485,10 @@ def main(*args):
                 if sleep_on_error_seconds > MAX_AUTO_SECONDS:
                     sleep_on_error_seconds = MAX_AUTO_SECONDS
             pywikibot.output("Sleeping for {} seconds.".format(sleep_seconds))
-            time.sleep(sleep_seconds)
+            try:
+                time.sleep(sleep_seconds)
+            except KeyboardInterrupt:
+                pywikibot.output("Sleep interrupted by user. Proceeding to next update.")
     except KeyboardInterrupt:
         pywikibot.output("Interrupted by user. Aborting.")
         return False
