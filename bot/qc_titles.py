@@ -98,6 +98,9 @@ def download(url: str, filename: str) -> str:
     except urllib.error.URLError as e:
         pywikibot.error(str(e))
         return None
+    except urllib.error.HTTPError as e:
+        pywikibot.error(str(e))
+        return None
     # Write data to file
     with open(filename, 'w') as f:
         f.write(data)
@@ -464,7 +467,7 @@ def main(*args):
                 pywikibot.error("Could not update.")
                 notify_user()
                 if last_success_datetime is not None:
-                    pywikibot.error("Last successful update happened @ " + last_success_datetime)
+                    pywikibot.error("Last successful update happened @ " + str(last_success_datetime))
                 else:
                     pywikibot.error("No successful updates yet.")
             # no comics on Saturday/Sunday, so skip three days after an update on Friday
