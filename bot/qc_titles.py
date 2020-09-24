@@ -48,6 +48,7 @@ from __future__ import absolute_import, division, unicode_literals
 import sys
 import re
 import urllib.request
+from socket import timeout
 import os.path
 from datetime import datetime
 from datetime import timedelta
@@ -99,6 +100,9 @@ def download(url: str, filename: str) -> str:
         pywikibot.error(str(e))
         return None
     except urllib.error.HTTPError as e:
+        pywikibot.error(str(e))
+        return None
+    except timeout as e:
         pywikibot.error(str(e))
         return None
     # Write data to file
