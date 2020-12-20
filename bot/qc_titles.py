@@ -202,7 +202,7 @@ def parse_archive(f: str, output: str = "data.lua"):
         tmp.write(dedent("""
         }
         return titles
-        -- [[Category:Lua Modules]]"""))
+        -- [[Category:Lua modules]]"""))
 
     pywikibot.output("Lua module is ready in file '{}'.".format(output))
 
