@@ -20,7 +20,7 @@ Example:
 """
 
 #
-# © Andrei Rybak, 2019-2020
+# © Andrei Rybak, 2019-2021
 # Written for Questionable Content Wiki
 #
 # Distributed under the terms of the MIT license.
@@ -46,6 +46,7 @@ from __future__ import absolute_import, division, unicode_literals
 import sys
 import re
 import urllib.request
+from socket import timeout
 import os.path
 from datetime import datetime
 from textwrap import dedent
@@ -82,9 +83,15 @@ def download(url: str, filename: str) -> str:
     pywikibot.output("Downloading {}...".format(filename))
     try:
         req = urllib.request.Request(url, headers={'User-Agent' : "Magic"})
-        response = urllib.request.urlopen(req)
+        response = urllib.request.urlopen(req, timeout=10)
         data = response.read().decode('utf-8', errors='ignore')
     except urllib.error.URLError as e:
+        pywikibot.error(str(e))
+        return None
+    except urllib.error.HTTPError as e:
+        pywikibot.error(str(e))
+        return None
+    except timeout as e:
         pywikibot.error(str(e))
         return None
     # Write data to file
