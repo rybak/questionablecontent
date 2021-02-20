@@ -170,6 +170,7 @@ def parse_archive(f: str, output: str = "data.lua"):
     m[1601] = m[3]
     m[1645] = "Unexpected Windfall"
     m[1758] = "Oh Shit"
+    m[2255] = "Butts Disease"
 
     # HTML encode these two just in case
     m[2680] = "&gt;:|"  # angry emoticon ">:|"
