@@ -8,6 +8,9 @@ Parameters:
 
 -summary        Extra message to add to the edit summary.
 
+-auto           Run bot automatically, without asking for confirmation of edits. This is useful for running the bot
+                using some kind of scheduler, like crontab.
+
 -nodownload     If used, do not download fresh archive.php.
 
 -page           Title of the page which should be updated.
@@ -60,7 +63,12 @@ from pywikibot.tools.formatter import color_format
 DEFAULT_PAGE_TITLE = 'Module:QC/titles'
 SOURCE_PAGE = 'archive.php'
 SOURCE_URL = 'https://questionablecontent.net/' + SOURCE_PAGE
+MIN_AUTO_SECONDS = 60 * 10
+MAX_AUTO_SECONDS = 60 * 60 * 6
 DEBUG = False
+if DEBUG:
+    MIN_AUTO_SECONDS = 10
+    MAX_AUTO_SECONDS = 30
 
 
 def grep_lua_last_comic(text):
@@ -249,7 +257,8 @@ def put_text(page, new, summary, count, asynchronous=False):
     return False
 
 
-def update_titles(new_data_file: str, want_download: bool, page_title: str, extra_summary: str) -> bool:
+def update_titles(new_data_file: str, want_download: bool, page_title: str, extra_summary: str,
+        automatic: bool) -> bool:
     """
     Perform a single update of page 'page_title' using 'archive.php' of QC website.
     """
@@ -319,10 +328,13 @@ def update_titles(new_data_file: str, want_download: bool, page_title: str, extr
         "\n\t{lightblue}{0}{default}", summary))
 
     try:
-        choice = pywikibot.input_choice(
-            "Do you want to accept these changes?",
-            [('Yes', 'y'), ('No', 'n'),
-             ('open in Browser', 'b')], 'n')
+        if automatic:
+            choice = 'y'
+        else:
+            choice = pywikibot.input_choice(
+                "Do you want to accept these changes?",
+                [('Yes', 'y'), ('No', 'n'),
+                 ('open in Browser', 'b')], 'n')
     except QuitKeyboardInterrupt:
         sys.exit("User quit bot run.")
 
@@ -358,6 +370,7 @@ def main(*args):
     want_download = True
     page_title = DEFAULT_PAGE_TITLE
     extra_summary = None
+    automatic = False
 
     for arg in local_args:
         option, sep, value = arg.partition(':')
@@ -369,6 +382,8 @@ def main(*args):
             page_title = value
         elif option == '-summary':
             extra_summary = value
+        elif option == '-auto':
+            automatic = True
         else:
             pywikibot.warning("Unrecognized option {}".format(option))
 
@@ -384,12 +399,33 @@ def main(*args):
             not check_option('-page', page_title):
         pywikibot.error("Aborting.")
         return False
+    if automatic and not want_download:
+        pywikibot.error("Flags -auto and -nodownload are not compatible.")
+        return False
     if want_download:
         pywikibot.output("Will download '{}'.".format(SOURCE_PAGE))
     pywikibot.output("Will edit page '{}'.".format(page_title))
 
     try:
-        return update_titles(new_data_file, want_download, page_title, extra_summary)
+        sleep_on_error_seconds = MIN_AUTO_SECONDS
+        while True:
+            updated = update_titles(new_data_file, want_download, page_title, extra_summary, automatic)
+            if updated:
+                pywikibot.output("Update successful.")
+                break
+            pywikibot.error("Could not update.")
+            pywikibot.output("Sleeping for {} seconds.".format(sleep_on_error_seconds))
+            try:
+                time.sleep(sleep_on_error_seconds)
+                # after using current value of sleep_on_error_seconds, increase it until max
+                sleep_on_error_seconds *= 2
+                if sleep_on_error_seconds > MAX_AUTO_SECONDS:
+                    sleep_on_error_seconds = MAX_AUTO_SECONDS
+            except KeyboardInterrupt:
+                pywikibot.output("Sleep interrupted by user. Proceeding to next update.")
+    except KeyboardInterrupt:
+        pywikibot.output("Interrupted by user. Aborting.")
+        return False
     except pywikibot.NoPage:
         pywikibot.error("{} doesn't exist, abort!".format(page.title()))
         return False
