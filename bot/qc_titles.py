@@ -54,6 +54,7 @@ import os.path
 from datetime import datetime
 from textwrap import dedent
 import time
+import subprocess
 
 import pywikibot
 from pywikibot.bot_choice import QuitKeyboardInterrupt
@@ -353,6 +354,53 @@ def update_titles(new_data_file: str, want_download: bool, page_title: str, extr
         return True
 
 
+def notify_user():
+    try:
+        app_name = os.path.basename(__file__)
+    except:
+        app_name = 'QC Wiki bot'
+    error_title = 'Warning'
+    error_message = 'Error in Questionable Content Wiki bot.'
+    full_message = error_title + '. ' + error_message
+
+    print('\a')  # ASCII bell
+    try:
+        # On Linuxes---using binary notify-send
+        # https://stackoverflow.com/a/44027111/1083697
+        subprocess.call(['notify-send', app_name, full_message, '--icon=dialog-error'])
+    except:
+        pass
+    try:
+        # On Ubuntu---using speech-to-text generator
+        # https://stackoverflow.com/a/29590673/1083697
+        # start speech dispatcher
+        subprocess.call(['speech-dispatcher'])
+        # option -r -50 slows down speech a bit.
+        subprocess.call(['spd-say', '-r', '-50', full_message])
+    except:
+        pass
+    try:
+        # pip3 install plyer
+        # Cross-platform python library
+        # https://stackoverflow.com/a/42085439/1083697
+        from plyer import notification
+        notification.notify(
+            title=error_title,
+            message=error_message,
+            app_name=app_name
+        )
+    except ImportError:
+        pass
+    try:
+        # pip3 install win10toast
+        # https://stackoverflow.com/a/49892758/1083697
+        from win10toast import ToastNotifier
+        toaster = ToastNotifier()
+        toaster.show_toast(app_name, full_message, duration=10)
+    except ImportError:
+        pass
+
+
 def main(*args):
     """
     Process command line arguments and invoke bot.
@@ -414,6 +462,7 @@ def main(*args):
                 pywikibot.output("Update successful.")
                 break
             pywikibot.error("Could not update.")
+            notify_user()
             pywikibot.output("Sleeping for {} seconds.".format(sleep_on_error_seconds))
             try:
                 time.sleep(sleep_on_error_seconds)
