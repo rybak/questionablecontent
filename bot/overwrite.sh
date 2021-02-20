@@ -1,4 +1,4 @@
-# mush be "source"d
+# must be "source"d
 
 if test ! -d "$SRC"
 then
@@ -13,15 +13,15 @@ then
 	exit 1
 fi
 
-SRC="$SRC/$filename"
-DEST="$DEST/$filename"
-if git diff --no-index "$DEST" "$SRC"
+NEW="$SRC/$filename"
+OLD="$DEST/$filename"
+if git diff --no-index "$OLD" "$NEW"
 then
-	echo "No difference from '$DEST' to '$SRC'"
+	echo "No difference from '$OLD' to '$NEW'"
 	exit 1
 fi
 
 echo "Press Enter to apply these changes."
 echo "Press Ctrl+C to abort."
-read && cp "$SRC" "$DEST"
+read && cp "$NEW" "$OLD"
 
