@@ -83,7 +83,7 @@ def is_fresh(filename):
         mt = os.path.getmtime(filename)
         last_modified = datetime.fromtimestamp(mt)
         delta = datetime.now() - last_modified
-        return delta.total_seconds() < 3600
+        return delta.total_seconds() < MIN_AUTO_SECONDS
     except OSError:
         return False
 
