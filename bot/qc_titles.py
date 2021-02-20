@@ -6,13 +6,13 @@ and updates Lua table on the page 'Module:QC/titles'.
 
 Parameters:
 
+-summary        Extra message to add to the edit summary.
+
 -nodownload     If used, do not download fresh archive.php.
 
 -page           Title of the page which should be updated.
 
 -file           File to read new Lua code from.
-
--summary        Extra message to add to the edit summary.
 
 Example:
 
