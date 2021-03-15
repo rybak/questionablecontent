@@ -460,8 +460,12 @@ def main(*args):
             updated = update_titles(new_data_file, want_download, page_title, extra_summary, automatic)
             if updated:
                 pywikibot.output("Update successful.")
+                with open('qc_titles_success.tmp', 'w') as f:
+                    f.write(str(datetime.now()))
                 break
             pywikibot.error("Could not update.")
+            with open('qc_titles_failure.tmp', 'w') as f:
+                f.write(str(datetime.now()))
             notify_user()
             pywikibot.output("Sleeping for {} seconds.".format(sleep_on_error_seconds))
             try:
