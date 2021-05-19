@@ -411,6 +411,8 @@ def main(*args):
     @type args: str
     """
 
+    pywikibot.output(color_format("Start: {white}{0}{default}", datetime.now()))
+
     local_args = pywikibot.handle_args(args)
 
     # default values for options
@@ -490,6 +492,8 @@ def main(*args):
         return False
     else:
         return True
+    finally:
+        pywikibot.output(color_format("Finish: {white}{0}{default}", datetime.now()))
 
 
 if __name__ == '__main__':
