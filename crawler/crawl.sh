@@ -10,7 +10,7 @@ echo "$FROM .. $LAST"
 
 START=$(date)
 echo "Started: $START"
-root_url='http://www.questionablecontent.net'
+root_url='https://www.questionablecontent.net'
 
 for i in $(seq $FROM $LAST)
 do
