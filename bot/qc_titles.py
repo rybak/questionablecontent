@@ -23,7 +23,7 @@ Example:
 """
 
 #
-# © Andrei Rybak, 2019-2021
+# © Andrei Rybak, 2019-2022
 # Written for Questionable Content Wiki
 #
 # Distributed under the terms of the MIT license.
@@ -58,7 +58,6 @@ import subprocess
 
 import pywikibot
 from pywikibot.bot_choice import QuitKeyboardInterrupt
-from pywikibot.tools.formatter import color_format
 
 
 DEFAULT_PAGE_TITLE = 'Module:QC/titles'
@@ -157,7 +156,7 @@ def parse_archive(f: str, output: str = "data.lua"):
     # check if any are missing
     for n in range(1, max(m) + 1):
         if n not in m:
-            pywikibot.output(color_format("Missing comic {red}#{0}{default}.", n))
+            pywikibot.output("Missing comic <<red>>#{}<<default>>.".format(n))
 
     ### fix known issues of the archive.php page ###
     ## missing in archive.php
@@ -204,7 +203,7 @@ def parse_archive(f: str, output: str = "data.lua"):
     # typo in the archive
     m[4230] = 'To Be Truthful'
 
-    pywikibot.output(color_format("Got {aqua}{0}{default} comic titles after cleanup.", len(m)))
+    pywikibot.output("Got <<aqua>>{}<<default>> comic titles after cleanup.".format(len(m)))
 
 
     def lua_item(r):
@@ -295,10 +294,8 @@ def update_titles(new_data_file: str, want_download: bool, page_title: str, extr
     new_last = grep_lua_last_comic(new_text)
 
     # report what will happen
-    pywikibot.output(color_format(
-        "Old version goes till {lightred}{0}{default}.", old_last))
-    pywikibot.output(color_format(
-        "New version goes till {lightgreen}{0}{default}.", new_last))
+    pywikibot.output("Old version goes till <<lightred>>{}<<default>>.".format(old_last))
+    pywikibot.output("New version goes till <<lightgreen>>{}<<default>>.".format(new_last))
     username = site.username()
     new_text = '-- Updated by {}\n'.format(username) + new_text.rstrip()
 
@@ -325,8 +322,8 @@ def update_titles(new_data_file: str, want_download: bool, page_title: str, extr
             extra_summary = pywikibot.input("Please add extra summary message:")
     if extra_summary:
         summary = summary + " ({})".format(extra_summary)
-    pywikibot.output(color_format("Summary will be" +
-        "\n\t{lightblue}{0}{default}", summary))
+    pywikibot.output("Summary will be" +
+        "\n\t<<lightblue>>{}<<default>>".format(summary))
 
     try:
         if automatic:
@@ -411,7 +408,7 @@ def main(*args):
     @type args: str
     """
 
-    pywikibot.output(color_format("Start: {white}{0}{default}", datetime.now()))
+    pywikibot.output("Start: <<white>>{}<<default>>".format(datetime.now()))
 
     local_args = pywikibot.handle_args(args)
 
@@ -493,7 +490,7 @@ def main(*args):
     else:
         return True
     finally:
-        pywikibot.output(color_format("Finish: {white}{0}{default}", datetime.now()))
+        pywikibot.output("Finish: <<white>>{}<<default>>".format(datetime.now()))
 
 
 if __name__ == '__main__':
