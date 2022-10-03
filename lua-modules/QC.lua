@@ -1,18 +1,19 @@
--- For Questionable Content Wiki
--- https://questionablecontent.fandom.com/wiki/Module:QC
---
 -- Lua links:
 -- https://en.wikipedia.org/wiki/Wikipedia:Lua
 -- https://www.mediawiki.org/wiki/Extension:Scribunto/Lua_reference_manual
 
-local p = {}
-
 local rootUrl = "https://www.questionablecontent.net"
+
+local p = {}
 local titles = mw.loadData('Module:QC/titles')
 
 -- num : comic number, mandatory argument
 -- Returns URL to a comic of given number.
-function p.viewUrl(num)
+local function viewUrl(num)
+	if num == nil
+	then
+		return rootUrl
+	end
     return rootUrl .. "/view.php?comic=" .. num
 end
 
@@ -58,7 +59,7 @@ function p.comicLink(num, text)
     then
         return p.link(rootUrl, text)
     end
-    local u = p.viewUrl(num)
+    local u = viewUrl(num)
     local t = text or p.getTitle(num)
     return p.link(u, t)
 end
@@ -83,7 +84,7 @@ function p._qc(num, text, custom)
     then
         code = p.customLink(num, text)
     else
-        code = p.comicLink(num, text)
+        code = p.comicLink(num, text)    
     end
     return '<span class="plainlinks">' .. code .. '</span>'
 end
@@ -98,7 +99,7 @@ function p.unwrapArg(arg)
     end
 end
 
--- Helper function
+-- Public function ([[Template:QC]])
 function p.qc(frame)
     local num = p.unwrapArg(frame.args[1])
     local text = p.unwrapArg(frame.args[2])
@@ -106,5 +107,16 @@ function p.qc(frame)
     return p._qc(num, text, custom)
 end
 
+-- Public function ([[Template:QC raw]])
+function p.viewUrl(frame)
+    local num = tonumber(p.unwrapArg(frame.args[1]))
+    return viewUrl(num)
+end
+
+-- Public function (not used)
+function p.rootUrl(frame)
+    return rootUrl
+end
+
 return p
---[[Category:Lua Modules]]
+--[[Category:Lua modules]]
