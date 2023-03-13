@@ -4,8 +4,8 @@
 # Script to download all comic views from http://questionablecontent.net/
 #
 
-LAST=${2:-$(grep -m 1 -o '[1-9][0-9]*' ../core_stable/data.lua | head -1 || echo "4041")}
-let FROM=${1:-${LAST}-10}
+LAST=${2:-$(grep -m 1 -o '[1-9][0-9]*' ../core_stable/data.lua | head -1 || echo "5000")}
+let FROM=${1:-${LAST}-100}
 echo "$FROM .. $LAST"
 
 START=$(date)
@@ -43,9 +43,9 @@ do
 		echo "OK"
 	else
 		echo "Downloading..."
-		wget "$root_url/comics/$file1" -O "$t1" || \
-			wget "$root_url/comics/$file2" -O "$t2" || \
-			wget "$root_url/comics/$file3" -O "$t3"
+		curl "$root_url/comics/$file1" -o "$t1" || \
+			curl "$root_url/comics/$file2" -o "$t2" || \
+			curl "$root_url/comics/$file3" -o "$t3"
 		if [[ ! -s "$t1" ]] && [[ -f "$t1" ]]
 		then
 			rm "$t1" && echo -n "$t1 is empty - "
@@ -58,7 +58,7 @@ do
 		then
 			rm "$t3" && echo -n "$t3 is empty - "
 		fi
-		ls "$DIR/$z"*
+		ls -l "$DIR/$z"*
 		sleep $(( $RANDOM % 5 ))
 	fi
 done
