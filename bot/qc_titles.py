@@ -194,14 +194,17 @@ def parse_archive(f: str, output: str = "data.lua"):
 
     # missing diacritic in the archive
     m[3219] = 'Sláinte'
-    # missing trademark sign in the archive
-    m[4029] = m[4029] + '™'
     # typo in the archive
     m[4032] = 'Friend To The Lowly'
     # extra comic number in the archive
     m[4087] = 'With Utmost Precision'
     # typo in the archive
     m[4230] = 'To Be Truthful'
+
+    # corrupted titles
+    m[2409] = 'Chaîne Des Puys'
+    m[2412] = 'Tschüss'
+    m[4029] = 'A New, Friendly You™'
 
     pywikibot.output("Got <<aqua>>{}<<default>> comic titles after cleanup.".format(len(m)))
 
