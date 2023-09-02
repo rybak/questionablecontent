@@ -23,7 +23,7 @@ Example:
 """
 
 #
-# © Andrei Rybak, 2019-2022
+# © Andrei Rybak, 2019-2023
 # Written for Questionable Content Wiki
 #
 # Distributed under the terms of the MIT license.
