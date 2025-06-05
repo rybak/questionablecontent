@@ -23,7 +23,7 @@ Example:
 """
 
 #
-# © Andrei Rybak, 2019-2023
+# © Andrei Rybak, 2019-2025
 # Written for Questionable Content Wiki
 #
 # Distributed under the terms of the MIT license.
@@ -205,6 +205,7 @@ def parse_archive(f: str, output: str = "data.lua"):
     m[2409] = 'Chaîne Des Puys'
     m[2412] = 'Tschüss'
     m[4029] = 'A New, Friendly You™'
+    m[5584] = "It's Piñata Time"
 
     pywikibot.output("Got <<aqua>>{}<<default>> comic titles after cleanup.".format(len(m)))
 
