@@ -195,11 +195,13 @@ def parse_archive(f: str, output: str = "data.lua"):
     # missing diacritic in the archive
     m[3219] = 'Sláinte'
     # typo in the archive
-    m[4032] = 'Friend To The Lowly'
     # extra comic number in the archive
     m[4087] = 'With Utmost Precision'
-    # typo in the archive
+
+    # typos in the archive
+    m[4032] = 'Friend To The Lowly'
     m[4230] = 'To Be Truthful'
+    m[5406] = "Catching Up With Steve"
 
     # corrupted titles
     m[2409] = 'Chaîne Des Puys'
