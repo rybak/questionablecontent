@@ -209,6 +209,7 @@ def parse_archive(f: str, output: str = "data.lua"):
     m[2412] = 'Tschüss'
     m[4029] = 'A New, Friendly You™'
     m[5584] = "It's Piñata Time"
+    m[5653] = "Comment Ça Va?"
 
     pywikibot.output("Got <<aqua>>{}<<default>> comic titles after cleanup.".format(len(m)))
 
