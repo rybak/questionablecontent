@@ -202,6 +202,7 @@ def parse_archive(f: str, output: str = "data.lua"):
     m[4032] = 'Friend To The Lowly'
     m[4230] = 'To Be Truthful'
     m[5406] = "Catching Up With Steve"
+    m[5490] = "Who Helps The Helpsmen?"
 
     # corrupted titles
     m[2409] = 'Chaîne Des Puys'
