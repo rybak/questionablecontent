@@ -5,7 +5,7 @@
 #
 
 LAST=${2:-$(grep -m 1 -o '[1-9][0-9]*' ../core_stable/data.lua | head -1 || echo "5000")}
-let FROM=${1:-${LAST}-100}
+let FROM=${1:-${LAST}-300}
 echo "$FROM .. $LAST"
 
 START=$(date)
