@@ -44,8 +44,6 @@ Example:
 # https://www.mediawiki.org/wiki/Manual:Pywikibot/Use_on_third-party_wikis
 #
 
-from __future__ import absolute_import, division, unicode_literals
-
 import sys
 import re
 import urllib.request
@@ -72,7 +70,7 @@ if DEBUG:
 
 
 def grep_lua_last_comic(text):
-    last_comic_m = re.search('\[([0-9]{4,6})\]', text)
+    last_comic_m = re.search(r"\[([0-9]{4,6})\]", text)
     last_comic = last_comic_m.group(1)
     return int(last_comic)
 
