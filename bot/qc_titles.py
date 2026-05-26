@@ -55,6 +55,7 @@ import time
 import subprocess
 
 import pywikibot
+import pywikibot.exceptions
 from pywikibot.bot_choice import QuitKeyboardInterrupt
 
 
@@ -240,9 +241,9 @@ def put_text(page, new, summary, count, asynchronous=False):
     try:
         page.save(summary=summary, asynchronous=asynchronous,
                   minor=page.namespace() != 3)
-    except pywikibot.EditConflict:
+    except pywikibot.exceptions.EditConflictError:
         pywikibot.output('Edit conflict! skip!')
-    except pywikibot.ServerError:
+    except pywikibot.exceptions.ServerError:
         if count <= config.max_retries:
             pywikibot.output('Server Error! Wait..')
             time.sleep(config.retry_wait)
@@ -250,13 +251,13 @@ def put_text(page, new, summary, count, asynchronous=False):
         else:
             raise pywikibot.ServerError(
                 'Server Error! Maximum retries exceeded')
-    except pywikibot.SpamfilterError as e:
+    except pywikibot.exceptions.SpamfilterError as e:
         pywikibot.output(
             'Cannot change {} because of blacklist entry {}'
             .format(page.title(), e.url))
-    except pywikibot.LockedPage:
+    except pywikibot.exceptions.LockedPageError:
         pywikibot.output('Skipping {} (locked page)'.format(page.title()))
-    except pywikibot.PageNotSaved as error:
+    except pywikibot.exceptions.PageNotSaved as error:
         pywikibot.output('Error putting page: {}'.format(error.args))
     else:
         return True
@@ -484,13 +485,13 @@ def main(*args):
     except KeyboardInterrupt:
         pywikibot.output("Interrupted by user. Aborting.")
         return False
-    except pywikibot.NoPage:
+    except pywikibot.exceptions.NoPageError:
         pywikibot.error("{} doesn't exist, abort!".format(page.title()))
         return False
-    except pywikibot.IsRedirectPage:
+    except pywikibot.exceptions.IsRedirectPageError:
         pywikibot.error("{} is a redirect, abort!".format(page.title()))
         return False
-    except pywikibot.Error as e:
+    except pywikibot.exceptions.Error as e:
         pywikibot.bot.suggest_help(exception=e)
         return False
     else:
