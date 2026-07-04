@@ -157,7 +157,7 @@ def parse_archive(f: str, output: str = "data.lua"):
         if n not in m:
             pywikibot.output("Missing comic <<red>>#{}<<default>>.".format(n))
 
-    ### fix known issues of the archive.php page ###
+    # fix known issues of the archive.php page
     ## missing in archive.php
     m[570] = "She Missed It All"
     m[870] = "Semi-Naker!"
@@ -167,25 +167,27 @@ def parse_archive(f: str, output: str = "data.lua"):
     m[2770] = "Plans Gone Awry"
 
     ## broken titles
-    # misnumbered as 931
+    ### misnumbered as 931
     m[971] = "Clean Freak by supar-webcomorx guest artiste Ryan Estrada"
-    # completely overwritten by 3906 for some reason
+    ### completely overwritten by 3906 for some reason
     m[3901] = "Multiple Anatomy"
-    # title duplicate overwritten by title from 2153
+    ### title duplicate overwritten by title from 2153
     m[2155] = "Be More Obvious"
-    # title duplicate overwritten by title from 2393
+    ### title duplicate overwritten by title from 2393
     m[2394] = "Greeting Gauntlet"
-    # comic 2308 is duplicated with a broken link to view.php?comic=0
+    ### comic 2308 is duplicated with a broken link to view.php?comic=0
     del(m[0])
-    # has two titles in archive
+    ### has two titles in archive
     m[1496] = "Tetsuoooooo! Kanedaaaaaaaaa!"
-    # have incorrect title in archive
+    ## have incorrect title in archive
     m[1464] = "Cheers"
     m[1499] = "One Year Anniversary Special"
     m[1601] = m[3]
     m[1645] = "Unexpected Windfall"
     m[1758] = "Oh Shit"
     m[2255] = "Butts Disease"
+    ### corrupted since 2026-07 upgrade of archive.php
+    m[2893] = "Night Secrets"
 
     # HTML encode these two just in case
     m[2680] = "&gt;:|"  # angry emoticon ">:|"
