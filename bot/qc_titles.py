@@ -60,7 +60,7 @@ from pywikibot.bot_choice import QuitKeyboardInterrupt
 
 
 DEFAULT_PAGE_TITLE = 'Module:QC/titles'
-SOURCE_PAGE = 'archive.php'
+SOURCE_PAGE = 'archive-list.php'
 SOURCE_URL = 'https://questionablecontent.net/' + SOURCE_PAGE
 MIN_AUTO_SECONDS = 60 * 10
 MAX_AUTO_SECONDS = 60 * 60 * 6
