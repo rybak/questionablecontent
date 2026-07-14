@@ -161,10 +161,11 @@ def parse_archive(f: str, output: str = "data.lua"):
     ## missing in archive.php
     m[570] = "She Missed It All"
     m[870] = "Semi-Naker!"
-
     ## missing titles
     m[878] = "One Flew Over The Cuckoo's Nest"
     m[2770] = "Plans Gone Awry"
+    ### missing since ~2026-07-13
+    m[521]="Those Are Not Words"
 
     ## broken titles
     ### misnumbered as 931
